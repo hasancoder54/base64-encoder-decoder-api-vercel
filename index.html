@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base64 API & Wiki</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg: #f8fafc; --fg: #0f172a; --accent: #3b82f6; --surface: #ffffff;
+        }
+        [data-theme='dark'] {
+            --bg: #09090b; --fg: #fafafa; --accent: #d4d4d8; --surface: #18181b;
+        }
+        [data-theme='amethyst'] {
+            --bg: #11061e; --fg: #e9d5ff; --accent: #a855f7; --surface: #2b154d;
+        }
+        [data-theme='hacker'] {
+            --bg: #000000; --fg: #22c55e; --accent: #16a34a; --surface: #052e16;
+        }
+        body {
+            background-color: var(--bg);
+            color: var(--fg);
+            transition: all 0.4s ease;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .surface { background-color: var(--surface); border: 1px solid color-mix(in srgb, var(--fg) 10%, transparent); }
+        .btn-accent { background-color: var(--accent); color: var(--bg); }
+    </style>
+</head>
+<body data-theme="dark" class="min-h-screen flex flex-col items-center justify-center p-6">
+
+    <div class="absolute top-6 right-6 flex gap-4">
+        <button id="langBtn" class="px-4 py-2 surface rounded-full text-sm font-bold tracking-widest uppercase hover:opacity-80 transition-opacity">TR</button>
+        <div class="surface rounded-full p-1 flex gap-2">
+            <button onclick="setTheme('light')" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-black/10">☀️</button>
+            <button onclick="setTheme('dark')" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10">🌙</button>
+            <button onclick="setTheme('amethyst')" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10">🔮</button>
+            <button onclick="setTheme('hacker')" class="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10">⚡</button>
+        </div>
+    </div>
+
+    <div class="w-full max-w-4xl grid md:grid-cols-2 gap-12 mt-12">
+        <div class="flex flex-col gap-6">
+            <div>
+                <h1 id="title" class="text-5xl font-extrabold tracking-tighter mb-2">Base64 Protokolü</h1>
+                <p id="subtitle" class="opacity-60 font-medium">Veri Kodlama ve Çözümleme Ağı</p>
+            </div>
+
+            <div class="flex surface p-1 rounded-lg w-fit gap-1">
+                <button id="btnEncode" onclick="setAction('encode')" class="px-6 py-2 rounded-md font-bold text-sm btn-accent transition-all">Kodla</button>
+                <button id="btnDecode" onclick="setAction('decode')" class="px-6 py-2 rounded-md font-bold text-sm transition-all opacity-70">Çöz</button>
+            </div>
+
+            <textarea id="inputText" class="w-full h-40 surface rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-opacity-50 resize-none transition-all" placeholder="Veriyi buraya girin..."></textarea>
+
+            <button onclick="processData()" class="w-full btn-accent py-4 rounded-xl font-bold text-lg hover:opacity-90 active:scale-95 transition-all" id="processBtn">İşlemi Başlat</button>
+        </div>
+
+        <div class="flex flex-col gap-8">
+            <div>
+                <label id="resultLabel" class="text-xs font-bold tracking-widest uppercase opacity-50 mb-2 block">Çıktı</label>
+                <div class="w-full min-h-[160px] surface rounded-xl p-4 break-words relative">
+                    <p id="outputText" class="opacity-30 italic">...</p>
+                </div>
+            </div>
+
+            <div class="surface rounded-xl p-6">
+                <h3 id="apiDocsTitle" class="text-lg font-bold mb-3">API Kullanımı</h3>
+                <p id="apiDocsDesc" class="text-sm opacity-70 mb-4">Sisteminizden doğrudan HTTP POST isteği göndererek API'yi kullanabilirsiniz.</p>
+                <pre class="bg-black/20 p-4 rounded-lg overflow-x-auto text-xs font-mono">
+curl -X POST /api/api \
+-H "Content-Type: application/json" \
+-d '{"action": "encode", "text": "Hasan"}'</pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAction = 'encode';
+        let lang = 'tr';
+
+        const dict = {
+            tr: { title: "Base64 Protokolü", sub: "Veri Kodlama ve Çözümleme Ağı", enc: "Kodla", dec: "Çöz", res: "Çıktı", place: "Veriyi buraya girin...", apiT: "API Kullanımı", apiD: "Sisteminizden doğrudan HTTP POST isteği göndererek API'yi kullanabilirsiniz." },
+            en: { title: "Base64 Protocol", sub: "Data Encoding/Decoding Network", enc: "Encode", dec: "Decode", res: "Output", place: "Enter data here...", apiT: "API Documentation", apiD: "Use the API directly by sending an HTTP POST request." }
+        };
+
+        function setTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+        }
+
+        function setAction(act) {
+            currentAction = act;
+            document.getElementById('btnEncode').className = act === 'encode' ? 'px-6 py-2 rounded-md font-bold text-sm btn-accent transition-all' : 'px-6 py-2 rounded-md font-bold text-sm transition-all opacity-70';
+            document.getElementById('btnDecode').className = act === 'decode' ? 'px-6 py-2 rounded-md font-bold text-sm btn-accent transition-all' : 'px-6 py-2 rounded-md font-bold text-sm transition-all opacity-70';
+        }
+
+        document.getElementById('langBtn').addEventListener('click', () => {
+            lang = lang === 'tr' ? 'en' : 'tr';
+            document.getElementById('langBtn').innerText = lang.toUpperCase();
+            document.getElementById('title').innerText = dict[lang].title;
+            document.getElementById('subtitle').innerText = dict[lang].sub;
+            document.getElementById('btnEncode').innerText = dict[lang].enc;
+            document.getElementById('btnDecode').innerText = dict[lang].dec;
+            document.getElementById('resultLabel').innerText = dict[lang].res;
+            document.getElementById('inputText').placeholder = dict[lang].place;
+            document.getElementById('apiDocsTitle').innerText = dict[lang].apiT;
+            document.getElementById('apiDocsDesc').innerText = dict[lang].apiD;
+        });
+
+        async function processData() {
+            const text = document.getElementById('inputText').value;
+            if (!text) return;
+            const out = document.getElementById('outputText');
+            out.innerText = "İşleniyor...";
+            out.className = "animate-pulse";
+            
+            try {
+                const res = await fetch('/api/api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: currentAction, text })
+                });
+                const data = await res.json();
+                out.className = "font-mono";
+                out.innerText = data.success ? data.result : `Hata: ${data.error}`;
+            } catch (e) {
+                out.innerText = "Ağ Hatası.";
+            }
+        }
+    </script>
+</body>
+</html>
